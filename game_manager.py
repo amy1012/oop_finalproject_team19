@@ -1,11 +1,18 @@
 # game_manager.py
 from typing import Literal, Optional
 from environment import TicTacToeEnvironment
-from players import Player, HumanPlayer, RandomAIPlayer, MinimaxAIPlayer
-import random  # ✅ 新增：用來隨機決定先手
+from players import (
+    Player,
+    HumanPlayer,
+    RandomAIPlayer,
+    MediumAIPlayer,
+    MinimaxAIPlayer,
+)
+import random  # 用來隨機決定先手
 
 
 GameMode = Literal["ai_vs_ai", "ai_vs_human"]
+Difficulty = Literal["easy", "medium", "hard"]
 
 
 class GameManager:
@@ -16,22 +23,38 @@ class GameManager:
     - 提供 GUI 呼叫的方法
     """
 
-    def __init__(self, mode: GameMode) -> None:
+    def __init__(self, mode: GameMode, difficulty: Difficulty = "hard") -> None:
         self.mode: GameMode = mode
+        self.difficulty: Difficulty = difficulty
         self.env = TicTacToeEnvironment()
 
         if mode == "ai_vs_ai":
-            # 你可以自己調整組合：Minimax vs Random、Minimax vs Minimax 都可
-            self.player_X: Player = MinimaxAIPlayer('X')
-            self.player_O: Player = RandomAIPlayer('O')
+            # ✅ 做法 A：難度同時套用到 X / O 兩個 AI
+            if difficulty == "easy":
+                self.player_X: Player = RandomAIPlayer('X')
+                self.player_O: Player = RandomAIPlayer('O')
+            elif difficulty == "medium":
+                self.player_X = MediumAIPlayer('X')
+                self.player_O = MediumAIPlayer('O')
+            else:  # "hard"
+                self.player_X = MinimaxAIPlayer('X')
+                self.player_O = MinimaxAIPlayer('O')
+
         elif mode == "ai_vs_human":
-            # 人類當 X，AI 當 O
+            # 人類當 X，AI 當 O，AI 策略依照難度決定
             self.player_X = HumanPlayer('X')
-            self.player_O = MinimaxAIPlayer('O')
+
+            if difficulty == "easy":
+                self.player_O = RandomAIPlayer('O')
+            elif difficulty == "medium":
+                self.player_O = MediumAIPlayer('O')
+            else:  # "hard"
+                self.player_O = MinimaxAIPlayer('O')
         else:
             raise ValueError(f"Unsupported mode: {mode}")
-        
-        self.env.current_player = random.choice(['X', 'O'])  # 隨機決定先手
+
+        # 隨機決定這一局由 X 還是 O 先手
+        self.env.current_player = random.choice(['X', 'O'])
 
     def reset(self) -> None:
         self.env.reset()
@@ -40,7 +63,7 @@ class GameManager:
 
     def get_current_player(self) -> Player:
         return self.player_X if self.env.current_player == 'X' else self.player_O
-    
+
     # 給 GUI 用：現在是不是人類回合？
     def is_current_player_human(self) -> bool:
         return isinstance(self.get_current_player(), HumanPlayer)
