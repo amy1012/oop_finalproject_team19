@@ -8,11 +8,15 @@ class TicTacToeGUI:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("OOP Tic-Tac-Toe")
+        # self.root.geometry("420x550")
+        self.root.resizable(False, False)
+        self.root.configure(bg="#f4f4f8")
+
         self.manager: Optional[GameManager] = None
         self.buttons = []
         self.status_label: Optional[tk.Label] = None
 
-        # 儲存難度選擇（預設 Hard）
+        # 難度選擇（預設 Hard）
         self.difficulty_var = tk.StringVar(value="hard")
 
         # ===== 多局戰績統計 =====
@@ -33,45 +37,75 @@ class TicTacToeGUI:
     # ---------- 首頁：選擇模式 & 難度 ----------
 
     def _build_mode_selection(self) -> None:
-        frame = tk.Frame(self.root)
-        frame.pack(padx=20, pady=20)
+        frame = tk.Frame(self.root, bg="#f4f4f8")
+        frame.pack(expand=True)
 
-        label = tk.Label(frame, text="請選擇模式", font=("Arial", 16))
-        label.pack(pady=10)
+        title = tk.Label(
+            frame, text="OOP Tic-Tac-Toe",
+            font=("Arial", 20, "bold"), bg="#f4f4f8"
+        )
+        title.pack(pady=(10, 20))
+
+        label = tk.Label(frame, text="請選擇模式", font=("Arial", 14), bg="#f4f4f8")
+        label.pack(pady=5)
+
+        # 模式按鈕列
+        mode_frame = tk.Frame(frame, bg="#f4f4f8")
+        mode_frame.pack(pady=5)
 
         btn_ai_human = tk.Button(
-            frame, text="AI 對 人類", width=15,
+            mode_frame, text="AI 對 人類", width=15,
+            font=("Arial", 11),
             command=lambda: self._start_game("ai_vs_human")
         )
-        btn_ai_human.pack(pady=5)
+        btn_ai_human.grid(row=0, column=0, padx=5)
 
         btn_ai_ai = tk.Button(
-            frame, text="AI 對 AI", width=15,
+            mode_frame, text="AI 對 AI", width=15,
+            font=("Arial", 11),
             command=lambda: self._start_game("ai_vs_ai")
         )
-        btn_ai_ai.pack(pady=5)
+        btn_ai_ai.grid(row=0, column=1, padx=5)
 
-        # 難度選擇區（所有 AI 的智慧程度）
-        diff_label = tk.Label(frame, text="請選擇難度（AI 智慧程度）", font=("Arial", 12))
-        diff_label.pack(pady=(15, 5))
+        # 難度選擇區
+        diff_label = tk.Label(
+            frame, text="請選擇難度（AI 智慧程度）", font=("Arial", 12),
+            bg="#f4f4f8"
+        )
+        diff_label.pack(pady=(20, 5))
+
+        diff_frame = tk.Frame(frame, bg="#f4f4f8")
+        diff_frame.pack()
 
         rb_easy = tk.Radiobutton(
-            frame, text="簡單（隨機 Random）",
-            variable=self.difficulty_var, value="easy"
+            diff_frame, text="簡單：隨機 Random",
+            variable=self.difficulty_var, value="easy",
+            bg="#f4f4f8"
         )
         rb_easy.pack(anchor="w")
 
         rb_medium = tk.Radiobutton(
-            frame, text="中等（規則 + 防守 Medium）",
-            variable=self.difficulty_var, value="medium"
+            diff_frame, text="中等：規則 + 防守 Medium",
+            variable=self.difficulty_var, value="medium",
+            bg="#f4f4f8"
         )
         rb_medium.pack(anchor="w")
 
         rb_hard = tk.Radiobutton(
-            frame, text="困難（Minimax 最佳步）",
-            variable=self.difficulty_var, value="hard"
+            diff_frame, text="困難：Minimax 最佳步",
+            variable=self.difficulty_var, value="hard",
+            bg="#f4f4f8"
         )
         rb_hard.pack(anchor="w")
+
+        hint = tk.Label(
+            frame,
+            text="提示：難度會影響所有 AI（包含 AI 對 AI）",
+            font=("Arial", 9),
+            fg="#555555",
+            bg="#f4f4f8"
+        )
+        hint.pack(pady=(15, 0))
 
         self.mode_frame = frame
 
@@ -89,47 +123,96 @@ class TicTacToeGUI:
 
         # 新的一局開始，還沒記錄過結果
         self.game_recorded = False
+        self.buttons = []
 
-        main_frame = tk.Frame(self.root)
-        main_frame.pack(padx=20, pady=20)
+        # --- 外層容器 ---
+        main_frame = tk.Frame(self.root, bg="#f4f4f8")
+        main_frame.pack(fill="both", expand=True, padx=15, pady=15)
+
+        # 標題 + 模式說明列
+        top_frame = tk.Frame(main_frame, bg="#f4f4f8")
+        top_frame.pack(fill="x", pady=(0, 10))
+
+        title = tk.Label(
+            top_frame, text="OOP Tic-Tac-Toe",
+            font=("Arial", 18, "bold"),
+            bg="#f4f4f8"
+        )
+        title.pack(anchor="w")
+
+        mode_text = "AI 對 人類" if mode == "ai_vs_human" else "AI 對 AI"
+        diff_map = {"easy": "簡單", "medium": "中等", "hard": "困難"}
+        info = tk.Label(
+            top_frame,
+            text=f"模式：{mode_text}   |   難度：{diff_map.get(difficulty, difficulty)}",
+            font=("Arial", 10),
+            fg="#555555",
+            bg="#f4f4f8"
+        )
+        info.pack(anchor="w")
 
         # 狀態列
-        self.status_label = tk.Label(main_frame, text="", font=("Arial", 14))
-        self.status_label.grid(row=0, column=0, columnspan=3, pady=(0, 10))
+        self.status_label = tk.Label(
+            main_frame, text="", font=("Arial", 14),
+            bg="#f4f4f8", fg="#333333"
+        )
+        self.status_label.pack(pady=(5, 10))
+
+        # 棋盤外框
+        board_frame_outer = tk.Frame(main_frame, bg="#f4f4f8")
+        board_frame_outer.pack(pady=5)
+
+        board_frame = tk.Frame(board_frame_outer, bg="#dcdde1", bd=2, relief="ridge")
+        board_frame.pack()
 
         # 3x3 棋盤按鈕
         for i in range(9):
             btn = tk.Button(
-                main_frame, text=" ", font=("Arial", 24),
+                board_frame, text=" ", font=("Arial", 26, "bold"),
                 width=3, height=1,
+                relief="flat",
+                bg="#fefefe",
                 command=lambda idx=i: self._on_cell_clicked(idx)
             )
-            btn.grid(row=1 + i // 3, column=i % 3, padx=5, pady=5)
+            row, col = divmod(i, 3)
+            btn.grid(row=row, column=col, padx=4, pady=4)
             self.buttons.append(btn)
 
-        # reset 按鈕
+        # 控制區：重新開始按鈕
+        control_frame = tk.Frame(main_frame, bg="#f4f4f8")
+        control_frame.pack(pady=(10, 5))
+
         reset_btn = tk.Button(
-            main_frame, text="重新開始", command=self._reset_game
+            control_frame, text="重新開始本局", command=self._reset_game,
+            font=("Arial", 11),
+            width=15
         )
-        reset_btn.grid(row=4, column=0, columnspan=3, pady=(10, 0))
+        reset_btn.pack()
+
+        # 分隔線
+        sep = tk.Frame(main_frame, height=1, bg="#cccccc")
+        sep.pack(fill="x", pady=(10, 6))
 
         # ===== 主畫面戰績區塊 =====
-        stats_frame = tk.Frame(main_frame)
-        stats_frame.grid(row=5, column=0, columnspan=3, pady=(10, 0))
+        stats_frame = tk.Frame(main_frame, bg="#f4f4f8")
+        stats_frame.pack(fill="x")
 
-        title = tk.Label(stats_frame, text="多局戰績統計", font=("Arial", 12, "bold"))
-        title.grid(row=0, column=0, columnspan=2, sticky="w")
+        stats_title = tk.Label(
+            stats_frame, text="多局戰績統計", font=("Arial", 12, "bold"),
+            bg="#f4f4f8"
+        )
+        stats_title.grid(row=0, column=0, columnspan=2, sticky="w")
 
-        self.stats_total_label = tk.Label(stats_frame, anchor="w")
+        self.stats_total_label = tk.Label(stats_frame, anchor="w", bg="#f4f4f8")
         self.stats_total_label.grid(row=1, column=0, columnspan=2, sticky="w")
 
-        self.stats_x_label = tk.Label(stats_frame, anchor="w")
+        self.stats_x_label = tk.Label(stats_frame, anchor="w", bg="#f4f4f8")
         self.stats_x_label.grid(row=2, column=0, columnspan=2, sticky="w")
 
-        self.stats_o_label = tk.Label(stats_frame, anchor="w")
+        self.stats_o_label = tk.Label(stats_frame, anchor="w", bg="#f4f4f8")
         self.stats_o_label.grid(row=3, column=0, columnspan=2, sticky="w")
 
-        self.stats_draw_label = tk.Label(stats_frame, anchor="w")
+        self.stats_draw_label = tk.Label(stats_frame, anchor="w", bg="#f4f4f8")
         self.stats_draw_label.grid(row=4, column=0, columnspan=2, sticky="w")
 
         self._update_ui()
@@ -278,11 +361,14 @@ class TicTacToeGUI:
         # 更新棋盤按鈕文字與可用性
         for i, btn in enumerate(self.buttons):
             value = env.board[i]
-            btn.config(text=value if value is not None else " ")
-            if env.done or value is not None:
-                btn.config(state="disabled")
+            if value is None:
+                btn.config(text=" ", state="normal", fg="#000000")
             else:
-                btn.config(state="normal")
+                # X / O 顏色區分
+                if value == 'X':
+                    btn.config(text="X", fg="#0070f3", state="disabled")
+                else:
+                    btn.config(text="O", fg="#e84118", state="disabled")
 
         # 更新狀態列
         if self.status_label is None:
@@ -298,7 +384,6 @@ class TicTacToeGUI:
                 self.status_label.config(text=f"{env.winner} 勝利！")
         else:
             self.status_label.config(text=f"輪到 {env.current_player}")
-
 
 if __name__ == "__main__":
     root = tk.Tk()
