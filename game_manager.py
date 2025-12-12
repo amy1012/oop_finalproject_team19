@@ -2,6 +2,7 @@
 from typing import Literal, Optional
 from environment import TicTacToeEnvironment
 from players import Player, HumanPlayer, RandomAIPlayer, MinimaxAIPlayer
+import random  # ✅ 新增：用來隨機決定先手
 
 
 GameMode = Literal["ai_vs_ai", "ai_vs_human"]
@@ -29,12 +30,20 @@ class GameManager:
             self.player_O = MinimaxAIPlayer('O')
         else:
             raise ValueError(f"Unsupported mode: {mode}")
+        
+        self.env.current_player = random.choice(['X', 'O'])  # 隨機決定先手
 
     def reset(self) -> None:
         self.env.reset()
+        # 重新開始遊戲時，也重新隨機先手
+        self.env.current_player = random.choice(['X', 'O'])
 
     def get_current_player(self) -> Player:
         return self.player_X if self.env.current_player == 'X' else self.player_O
+    
+    # 給 GUI 用：現在是不是人類回合？
+    def is_current_player_human(self) -> bool:
+        return isinstance(self.get_current_player(), HumanPlayer)
 
     def human_move(self, action: int) -> None:
         """

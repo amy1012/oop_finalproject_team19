@@ -69,6 +69,9 @@ class TicTacToeGUI:
 
         self._update_ui()
 
+        # 如果是 AI 先手（在 AI vs Human 模式），讓 AI 自動先走一步
+        self._maybe_ai_first_move()
+
         # 如果是 AI 對 AI，啟動自動對戰
         if mode == "ai_vs_ai":
             self._ai_vs_ai_loop()
@@ -80,8 +83,23 @@ class TicTacToeGUI:
             return
         self.manager.reset()
         self._update_ui()
+
+        # reset 後也檢查一次先手是不是 AI
+        self._maybe_ai_first_move()
+
         if self.manager.mode == "ai_vs_ai":
             self._ai_vs_ai_loop()
+
+    def _maybe_ai_first_move(self) -> None:
+        if self.manager is None or self.manager.env.done:
+            return
+        # 只在 AI vs Human 模式下啟用
+        if self.manager.mode != "ai_vs_human":
+            return
+        # 如果現在的 player 不是人類，就讓 AI 動一下
+        if not self.manager.is_current_player_human():
+            # 稍微延遲，看起來像 AI 在「思考」
+            self.root.after(400, self._ai_move_once)
 
     def _on_cell_clicked(self, idx: int) -> None:
         if self.manager is None or self.manager.env.done:
