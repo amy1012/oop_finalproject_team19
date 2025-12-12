@@ -1,3 +1,4 @@
+# gui_main.py
 import tkinter as tk
 from typing import Optional
 from game_manager import GameManager, GameMode, Difficulty
@@ -13,6 +14,19 @@ class TicTacToeGUI:
 
         # 儲存難度選擇（預設 Hard）
         self.difficulty_var = tk.StringVar(value="hard")
+
+        # ===== 多局戰績統計 =====
+        self.total_games = 0
+        self.x_wins = 0
+        self.o_wins = 0
+        self.draws = 0
+        self.game_recorded = False  # 這一局的結果是否已經計入戰績
+
+        # 主畫面上的戰績 Label
+        self.stats_total_label: Optional[tk.Label] = None
+        self.stats_x_label: Optional[tk.Label] = None
+        self.stats_o_label: Optional[tk.Label] = None
+        self.stats_draw_label: Optional[tk.Label] = None
 
         self._build_mode_selection()
 
@@ -37,7 +51,7 @@ class TicTacToeGUI:
         )
         btn_ai_ai.pack(pady=5)
 
-        # 難度選擇區（只影響 AI vs Human 時的 AI）
+        # 難度選擇區（所有 AI 的智慧程度）
         diff_label = tk.Label(frame, text="請選擇難度（AI 智慧程度）", font=("Arial", 12))
         diff_label.pack(pady=(15, 5))
 
@@ -66,12 +80,15 @@ class TicTacToeGUI:
     def _start_game(self, mode: GameMode) -> None:
         self.mode_frame.destroy()
 
-        # 取得目前選擇的難度（字串 "easy" / "medium" / "hard"）
+        # 取得目前選擇的難度（"easy" / "medium" / "hard"）
         difficulty: Difficulty = self.difficulty_var.get()  # type: ignore
 
         # 建立 GameManager，帶入難度
         self.manager = GameManager(mode, difficulty)
         self.manager.reset()
+
+        # 新的一局開始，還沒記錄過結果
+        self.game_recorded = False
 
         main_frame = tk.Frame(self.root)
         main_frame.pack(padx=20, pady=20)
@@ -96,7 +113,27 @@ class TicTacToeGUI:
         )
         reset_btn.grid(row=4, column=0, columnspan=3, pady=(10, 0))
 
+        # ===== 主畫面戰績區塊 =====
+        stats_frame = tk.Frame(main_frame)
+        stats_frame.grid(row=5, column=0, columnspan=3, pady=(10, 0))
+
+        title = tk.Label(stats_frame, text="多局戰績統計", font=("Arial", 12, "bold"))
+        title.grid(row=0, column=0, columnspan=2, sticky="w")
+
+        self.stats_total_label = tk.Label(stats_frame, anchor="w")
+        self.stats_total_label.grid(row=1, column=0, columnspan=2, sticky="w")
+
+        self.stats_x_label = tk.Label(stats_frame, anchor="w")
+        self.stats_x_label.grid(row=2, column=0, columnspan=2, sticky="w")
+
+        self.stats_o_label = tk.Label(stats_frame, anchor="w")
+        self.stats_o_label.grid(row=3, column=0, columnspan=2, sticky="w")
+
+        self.stats_draw_label = tk.Label(stats_frame, anchor="w")
+        self.stats_draw_label.grid(row=4, column=0, columnspan=2, sticky="w")
+
         self._update_ui()
+        self._update_stats_labels()  # 一開始顯示目前戰績（通常都是 0）
 
         # 若是 AI 先手（且在 AI vs Human 模式），讓 AI 自動先走一步
         self._maybe_ai_first_move()
@@ -111,7 +148,11 @@ class TicTacToeGUI:
         if self.manager is None:
             return
         self.manager.reset()
+        # 新的一局開始，先把「這局是否已記錄」重設
+        self.game_recorded = False
         self._update_ui()
+        # 戰績是累積的，所以不用歸零，只要維持顯示
+        self._update_stats_labels()
 
         # reset 後也檢查一次：是否需要讓 AI 先走一步
         self._maybe_ai_first_move()
@@ -163,6 +204,70 @@ class TicTacToeGUI:
         if not self.manager.env.done:
             self.root.after(500, self._ai_vs_ai_loop)
 
+    # ---------- 戰績統計邏輯（顯示在主畫面） ----------
+
+    def _record_result(self) -> None:
+        """
+        把目前這一局的結果記錄進戰績（只記一次）。
+        """
+        if self.manager is None:
+            return
+        env = self.manager.env
+        if not env.done:
+            return
+        if self.game_recorded:
+            return  # 已經記過了就不要重複記
+
+        self.game_recorded = True
+        self.total_games += 1
+
+        if env.winner == 'X':
+            self.x_wins += 1
+        elif env.winner == 'O':
+            self.o_wins += 1
+        else:
+            self.draws += 1
+
+        # 更新畫面上的統計文字
+        self._update_stats_labels()
+
+    def _update_stats_labels(self) -> None:
+        """
+        依照目前統計數字更新主畫面戰績 Label 的文字。
+        """
+        if (
+            self.stats_total_label is None or
+            self.stats_x_label is None or
+            self.stats_o_label is None or
+            self.stats_draw_label is None
+        ):
+            return
+
+        total = self.total_games
+        x_w = self.x_wins
+        o_w = self.o_wins
+        d_w = self.draws
+
+        if total > 0:
+            x_rate = x_w / total * 100
+            o_rate = o_w / total * 100
+            d_rate = d_w / total * 100
+        else:
+            x_rate = o_rate = d_rate = 0.0
+
+        self.stats_total_label.config(
+            text=f"總對局數：{total}"
+        )
+        self.stats_x_label.config(
+            text=f"X 勝：{x_w} 局（{x_rate:.1f}%）"
+        )
+        self.stats_o_label.config(
+            text=f"O 勝：{o_w} 局（{o_rate:.1f}%）"
+        )
+        self.stats_draw_label.config(
+            text=f"平手：{d_w} 局（{d_rate:.1f}%）"
+        )
+
     # ---------- UI 更新 ----------
 
     def _update_ui(self) -> None:
@@ -184,6 +289,9 @@ class TicTacToeGUI:
             return
 
         if env.done:
+            # 一旦遊戲結束，就紀錄進戰績（只會記一次）
+            self._record_result()
+
             if env.winner is None:
                 self.status_label.config(text="平手！")
             else:
