@@ -11,7 +11,7 @@ from players import (
 import random  # 用來隨機決定先手
 
 
-GameMode = Literal["ai_vs_ai", "ai_vs_human"]
+GameMode = Literal["ai_vs_ai", "ai_vs_human", "human_vs_human"]
 Difficulty = Literal["easy", "medium", "hard"]
 
 
@@ -29,10 +29,9 @@ class GameManager:
         self.env = TicTacToeEnvironment()
 
         if mode == "ai_vs_ai":
-            # ✅ 做法 A：難度同時套用到 X / O 兩個 AI
             if difficulty == "easy":
-                self.player_X: Player = RandomAIPlayer('X')
-                self.player_O: Player = RandomAIPlayer('O')
+                self.player_X = RandomAIPlayer('X')
+                self.player_O = RandomAIPlayer('O')
             elif difficulty == "medium":
                 self.player_X = MediumAIPlayer('X')
                 self.player_O = MediumAIPlayer('O')
@@ -41,15 +40,20 @@ class GameManager:
                 self.player_O = MinimaxAIPlayer('O')
 
         elif mode == "ai_vs_human":
-            # 人類當 X，AI 當 O，AI 策略依照難度決定
+            # 人類固定是 X，AI 是 O
             self.player_X = HumanPlayer('X')
-
             if difficulty == "easy":
                 self.player_O = RandomAIPlayer('O')
             elif difficulty == "medium":
                 self.player_O = MediumAIPlayer('O')
             else:  # "hard"
                 self.player_O = MinimaxAIPlayer('O')
+
+        elif mode == "human_vs_human":
+            # ✅ 新增：人類對人類
+            self.player_X = HumanPlayer('X')
+            self.player_O = HumanPlayer('O')
+
         else:
             raise ValueError(f"Unsupported mode: {mode}")
 
@@ -64,23 +68,23 @@ class GameManager:
     def get_current_player(self) -> Player:
         return self.player_X if self.env.current_player == 'X' else self.player_O
 
-    # 給 GUI 用：現在是不是人類回合？
     def is_current_player_human(self) -> bool:
         return isinstance(self.get_current_player(), HumanPlayer)
 
     def human_move(self, action: int) -> None:
         """
         給 GUI 用：當使用者在某個格子按下去時呼叫。
-        只允許在 human 回合呼叫。
+        在 human_vs_human：每回合都是 Human，所以直接走這個流程即可。
         """
         player = self.get_current_player()
         if not isinstance(player, HumanPlayer):
-            # 如果現在不是人類回合，就忽略
             return
         if action not in self.env.available_actions():
             return
         player.set_next_action(action)
         chosen = player.select_action(self.env)
+        if chosen is None:
+            return
         self.env.step(chosen)
 
     def ai_move(self) -> Optional[int]:
@@ -92,8 +96,9 @@ class GameManager:
             return None
         player = self.get_current_player()
         if isinstance(player, HumanPlayer):
-            # 現在是人類回合，不該呼叫 ai_move
             return None
         action = player.select_action(self.env)
+        if action is None:
+            return None
         self.env.step(action)
         return action
