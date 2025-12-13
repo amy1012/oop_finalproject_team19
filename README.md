@@ -2,6 +2,10 @@
 
 ## Project Overview
 
+### Part 2: Frozen Lake
+
+The primary objective of this project is to tune the exploration parameters of a Q-learning agent to achieve a consistent success rate greater than 0.70 in the Frozen Lake-v1 environment.
+
 ### Part 3: Tic-Tac-Toe (GUI and AI)
 
 This project implements a fully modular **Tic-Tac-Toe** game using object-oriented design principles.
@@ -44,6 +48,18 @@ The graphical user interface is implemented using **tkinter**, allowing users to
 
 ## How to Run
 
+### Part 2: Frozen Lake
+
+1. Install Python 3.11
+2. Install gymnasium, matplotlib, numpy, and pygame
+3. Run the following command:
+
+```bash
+python frozen_lake.py
+```
+
+### Part 3: Tic-Tac-Toe (GUI and AI)
+
 1. Make sure **Python 3** is installed on your system.
 2. Open a terminal in the project directory.
 3. Run the following command:
@@ -57,7 +73,14 @@ After execution, a GUI window will open, allowing the user to select the game mo
 
 ## Dependencies
 
-This project uses **only Python standard libraries**:
+### Part 2: Frozen Lake
+
+This part uses gymnasium, matplotlib, numpy, pygame libraries.
+
+
+### Part 3: Tic-Tac-Toe (GUI and AI)
+
+This part uses **only Python standard libraries**:
 
 * `tkinter`
 * `random`
