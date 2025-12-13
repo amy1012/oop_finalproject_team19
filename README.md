@@ -4,7 +4,7 @@
 
 ### Part 3: Tic-Tac-Toe (GUI and AI)
 
-This project implements a fully modular **Tic-Tac-Toe (井字棋)** game using object-oriented design principles.
+This project implements a fully modular **Tic-Tac-Toe** game using object-oriented design principles.
 
 The system is carefully structured to separate responsibilities, including:
 
@@ -29,7 +29,6 @@ This design improves code readability, maintainability, and extensibility, and d
 
 The graphical user interface is implemented using **tkinter**, allowing users to interactively select game modes and difficulty levels.
 
----
 
 ## Project Structure
 
@@ -42,7 +41,6 @@ The graphical user interface is implemented using **tkinter**, allowing users to
 └── README.md
 ```
 
----
 
 ## How to Run
 
@@ -56,7 +54,6 @@ python gui_main.py
 
 After execution, a GUI window will open, allowing the user to select the game mode and AI difficulty, and then play the game interactively.
 
----
 
 ## Dependencies
 
@@ -69,7 +66,6 @@ This project uses **only Python standard libraries**:
 
 No additional package installation is required.
 
----
 
 ## Contribution List
 
