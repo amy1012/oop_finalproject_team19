@@ -32,11 +32,73 @@ class TicTacToeGUI:
         self.stats_o_label: Optional[tk.Label] = None
         self.stats_draw_label: Optional[tk.Label] = None
 
+        # --- 新增：用來回到主頁/取消排程 ---
+        self.mode_frame: Optional[tk.Frame] = None     # 主頁 frame
+        self.game_frame: Optional[tk.Frame] = None     # 遊戲 frame
+        self.after_id: Optional[str] = None            # root.after 的排程 id
+
+        self._build_mode_selection()
+
+    # ---------- 共用工具：取消 after 排程 ----------
+
+    def _cancel_scheduled_tasks(self) -> None:
+        """取消所有 root.after 排程，避免回主頁後 AI 還在跑。"""
+        if self.after_id is not None:
+            try:
+                self.root.after_cancel(self.after_id)
+            except Exception:
+                pass
+            self.after_id = None
+
+    # ---------- 戰績：清零 ----------
+
+    def _reset_stats(self) -> None:
+        """清空戰績（回到主頁時使用）。"""
+        self.total_games = 0
+        self.x_wins = 0
+        self.o_wins = 0
+        self.draws = 0
+        self.game_recorded = False
+
+    # ---------- 回到主頁 ----------
+
+    def _back_to_home(self) -> None:
+        """
+        回到主頁：
+        1) 取消 after 排程
+        2) 銷毀遊戲畫面
+        3) manager 清空
+        4) 戰績清零
+        5) 重建主頁模式選單
+        """
+        self._cancel_scheduled_tasks()
+
+        # 回主頁要求戰績清零
+        self._reset_stats()
+
+        self.manager = None
+        self.buttons = []
+        self.status_label = None
+
+        # 銷毀遊戲畫面
+        if self.game_frame is not None:
+            self.game_frame.destroy()
+            self.game_frame = None
+
+        # 重建主頁
         self._build_mode_selection()
 
     # ---------- 首頁：選擇模式 & 難度 ----------
 
     def _build_mode_selection(self) -> None:
+        # 如果之前主頁還在（理論上不會），先清掉
+        if self.mode_frame is not None:
+            try:
+                self.mode_frame.destroy()
+            except Exception:
+                pass
+            self.mode_frame = None
+
         frame = tk.Frame(self.root, bg="#f4f4f8")
         frame.pack(expand=True)
 
@@ -112,7 +174,13 @@ class TicTacToeGUI:
     # ---------- 建立遊戲畫面 ----------
 
     def _start_game(self, mode: GameMode) -> None:
-        self.mode_frame.destroy()
+        # 進入遊戲前，先取消可能殘留的排程（保險）
+        self._cancel_scheduled_tasks()
+
+        # 銷毀主頁
+        if self.mode_frame is not None:
+            self.mode_frame.destroy()
+            self.mode_frame = None
 
         # 取得目前選擇的難度（"easy" / "medium" / "hard"）
         difficulty: Difficulty = self.difficulty_var.get()  # type: ignore
@@ -125,9 +193,10 @@ class TicTacToeGUI:
         self.game_recorded = False
         self.buttons = []
 
-        # --- 外層容器 ---
+        # --- 外層容器（遊戲畫面）---
         main_frame = tk.Frame(self.root, bg="#f4f4f8")
         main_frame.pack(fill="both", expand=True, padx=15, pady=15)
+        self.game_frame = main_frame
 
         # 標題 + 模式說明列
         top_frame = tk.Frame(main_frame, bg="#f4f4f8")
@@ -178,7 +247,7 @@ class TicTacToeGUI:
             btn.grid(row=row, column=col, padx=4, pady=4)
             self.buttons.append(btn)
 
-        # 控制區：重新開始按鈕
+        # 控制區：重新開始 / 回到主頁
         control_frame = tk.Frame(main_frame, bg="#f4f4f8")
         control_frame.pack(pady=(10, 5))
 
@@ -187,7 +256,14 @@ class TicTacToeGUI:
             font=("Arial", 11),
             width=15
         )
-        reset_btn.pack()
+        reset_btn.grid(row=0, column=0, padx=6)
+
+        home_btn = tk.Button(
+            control_frame, text="回到主頁", command=self._back_to_home,
+            font=("Arial", 11),
+            width=15
+        )
+        home_btn.grid(row=0, column=1, padx=6)
 
         # 分隔線
         sep = tk.Frame(main_frame, height=1, bg="#cccccc")
@@ -228,12 +304,18 @@ class TicTacToeGUI:
     # ---------- 遊戲流程 ----------
 
     def _reset_game(self) -> None:
+        # reset 前先取消任何排程（避免舊 loop/延遲還在）
+        self._cancel_scheduled_tasks()
+
         if self.manager is None:
             return
         self.manager.reset()
+
         # 新的一局開始，先把「這局是否已記錄」重設
         self.game_recorded = False
+
         self._update_ui()
+
         # 戰績是累積的，所以不用歸零，只要維持顯示
         self._update_stats_labels()
 
@@ -255,7 +337,7 @@ class TicTacToeGUI:
         # 如果現在輪到的不是人類 → 就是 AI 先手
         if not self.manager.is_current_player_human():
             # 稍微延遲，看起來像 AI 在思考
-            self.root.after(400, self._ai_move_once)
+            self.after_id = self.root.after(400, self._ai_move_once)
 
     def _on_cell_clicked(self, idx: int) -> None:
         if self.manager is None or self.manager.env.done:
@@ -269,9 +351,12 @@ class TicTacToeGUI:
 
         # 若遊戲還沒結束，輪到 AI
         if not self.manager.env.done:
-            self.root.after(400, self._ai_move_once)
+            self.after_id = self.root.after(400, self._ai_move_once)
 
     def _ai_move_once(self) -> None:
+        # 這個排程已觸發，先清掉 id
+        self.after_id = None
+
         if self.manager is None or self.manager.env.done:
             return
         self.manager.ai_move()
@@ -279,13 +364,72 @@ class TicTacToeGUI:
 
     def _ai_vs_ai_loop(self) -> None:
         """AI 對 AI 的自動迴圈"""
+        # 這個排程已觸發，先清掉 id
+        self.after_id = None
+
         if self.manager is None or self.manager.env.done:
             return
         # 每 500ms 讓一個 AI 下棋
         self.manager.ai_move()
         self._update_ui()
         if not self.manager.env.done:
-            self.root.after(500, self._ai_vs_ai_loop)
+            self.after_id = self.root.after(500, self._ai_vs_ai_loop)
+
+    # ---------- 戰績統計邏輯（顯示在主畫面） ----------
+
+    def _record_result(self) -> None:
+        """
+        把目前這一局的結果記錄進戰績（只記一次）。
+        """
+        if self.manager is None:
+            return
+        env = self.manager.env
+        if not env.done:
+            return
+        if self.game_recorded:
+            return  # 已經記過了就不要重複記
+
+        self.game_recorded = True
+        self.total_games += 1
+
+        if env.winner == 'X':
+            self.x_wins += 1
+        elif env.winner == 'O':
+            self.o_wins += 1
+        else:
+            self.draws += 1
+
+        # 更新畫面上的統計文字
+        self._update_stats_labels()
+
+    def _update_stats_labels(self) -> None:
+        """
+        依照目前統計數字更新主畫面戰績 Label 的文字。
+        """
+        if (
+            self.stats_total_label is None or
+            self.stats_x_label is None or
+            self.stats_o_label is None or
+            self.stats_draw_label is None
+        ):
+            return
+
+        total = self.total_games
+        x_w = self.x_wins
+        o_w = self.o_wins
+        d_w = self.draws
+
+        if total > 0:
+            x_rate = x_w / total * 100
+            o_rate = o_w / total * 100
+            d_rate = d_w / total * 100
+        else:
+            x_rate = o_rate = d_rate = 0.0
+
+        self.stats_total_label.config(text=f"總對局數：{total}")
+        self.stats_x_label.config(text=f"X 勝：{x_w} 局（{x_rate:.1f}%）")
+        self.stats_o_label.config(text=f"O 勝：{o_w} 局（{o_rate:.1f}%）")
+        self.stats_draw_label.config(text=f"平手：{d_w} 局（{d_rate:.1f}%）")
 
     # ---------- 戰績統計邏輯（顯示在主畫面） ----------
 
