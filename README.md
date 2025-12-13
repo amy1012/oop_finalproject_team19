@@ -1,22 +1,33 @@
-# OOP Programming Group Project
+# OOP Programming Group Project 
 
-## Part 3
+## Project Overview
 
-This project is a **Python-based Tic-Tac-Toe game** implemented with a clear modular design. The system separates **game logic**, **environment state**, **player strategies (human / AI)**, and **GUI interaction**, making it easy to understand, extend, and maintain.
+### Part 3: Tic-Tac-Toe (GUI and AI)
 
-Key features include:
+This project implements a fully modular **Tic-Tac-Toe (井字棋)** game using object-oriented design principles.
 
-* A clean **environment abstraction** that manages the board state, turn-taking, legality checks, and win/draw conditions.
-* Multiple **player types**, including human players and AI players.
-* An AI opponent implemented using the **Minimax algorithm**, allowing the computer to play optimally.
-* A simple **GUI interface** for interactive play.
+The system is carefully structured to separate responsibilities, including:
 
-This project is suitable for learning:
+* Game environment and rules
+* Player strategies (Human and AI)
+* Game flow control
+* Graphical user interface (GUI)
 
-* Object-Oriented Programming (OOP)
-* Game state modeling
-* Basic AI decision-making (Minimax)
-* Separation of concerns in software design
+This design improves code readability, maintainability, and extensibility, and demonstrates proper use of OOP concepts.
+
+### Supported Game Modes
+
+* Human vs Human
+* Human vs AI
+* AI vs AI
+
+### AI Difficulty Levels
+
+* **Easy**: Random move selection
+* **Medium**: Rule-based strategy
+* **Hard**: Minimax algorithm for optimal decision-making
+
+The graphical user interface is implemented using **tkinter**, allowing users to interactively select game modes and difficulty levels.
 
 ---
 
@@ -24,89 +35,46 @@ This project is suitable for learning:
 
 ```text
 .
-├── environment.py     # Game environment: board state, rules, win/draw logic
-├── players.py         # Player definitions (Human, AI / Minimax player)
-├── game_manager.py    # Game flow control and coordination
-├── gui_main.py        # GUI entry point
-└── README.md          # Project documentation
+├── environment.py      # Tic-Tac-Toe environment (board state, rules, win/draw checking)
+├── players.py          # Player implementations (Human and AI players)
+├── game_manager.py     # Game flow control and mode/difficulty management
+├── gui_main.py         # Graphical user interface entry point
+└── README.md
 ```
-
-### File Responsibilities
-
-* **environment.py**
-  Defines the `TicTacToeEnvironment` class, which is responsible for:
-
-  * Storing and resetting the board state
-  * Tracking the current player
-  * Validating actions
-  * Determining win, loss, or draw conditions
-
-* **players.py**
-  Implements different player behaviors, including:
-
-  * Human player input handling
-  * AI player logic based on the Minimax algorithm
-
-* **game_manager.py**
-  Acts as the controller of the game, coordinating:
-
-  * Turns between players
-  * Interaction between players and the environment
-  * Game termination conditions
-
-* **gui_main.py**
-  Provides the graphical user interface and serves as the main entry point for running the game.
 
 ---
 
 ## How to Run
 
-### 1. Environment Requirements
-
-* Python **3.8 or above**
-
-### 2. Install Dependencies
-
-This project only relies on **standard Python libraries**. No additional third-party packages are required.
-
-If you want to be safe, you can still create and activate a virtual environment:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate   # macOS / Linux
-# venv\\Scripts\\activate  # Windows
-```
-
-### 3. Run the Game
-
-Execute the GUI entry file:
+1. Make sure **Python 3** is installed on your system.
+2. Open a terminal in the project directory.
+3. Run the following command:
 
 ```bash
 python gui_main.py
 ```
 
-After running the command, the game window will open and you can start playing Tic-Tac-Toe against another player or the AI.
+After execution, a GUI window will open, allowing the user to select the game mode and AI difficulty, and then play the game interactively.
 
 ---
 
 ## Dependencies
 
-This project uses only **Python built-in libraries**, including:
+This project uses **only Python standard libraries**:
 
-* `typing` – for type hints and improved code readability
-* Standard GUI libraries used in `gui_main.py` (depending on implementation)
+* `tkinter`
+* `random`
+* `typing`
+* `abc`
 
-No external packages are required.
+No additional package installation is required.
 
 ---
 
-## Notes
+## Contribution List
 
-* The AI player uses the **Minimax algorithm**, ensuring optimal play.
-* The modular structure makes it easy to:
+* **Part 1 & Part 2 :**
+  陳冠穎
 
-  * Add new AI strategies
-  * Replace the GUI with a CLI version
-  * Extend the game to larger board sizes
-
-This project is designed for educational purposes and OOP practice.
+* **Part 3 :**
+  莊尹安、王芊婷
