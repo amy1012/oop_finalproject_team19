@@ -23,10 +23,10 @@ def run(episodes, is_training=True, render=False):
         q = pickle.load(f)
         f.close()
 
-    learning_rate_a = 0.9 # alpha or learning rate
-    discount_factor_g = 0.991 # gamma or discount rate. Near 0: more weight/reward placed on immediate state. Near 1: more on future state.
+    learning_rate_a = 0.5 # alpha or learning rate
+    discount_factor_g = 0.99020 # gamma or discount rate. Near 0: more weight/reward placed on immediate state. Near 1: more on future state.
     epsilon = 1         # 1 = 100% random actions
-    epsilon_decay_rate = 0.0001        # epsilon decay rate. 1/0.0001 = 10,000
+    epsilon_decay_rate = 0.00007642        # epsilon decay rate. 1/0.0001 = 10,000
     rng = np.random.default_rng()   # random number generator
 
     rewards_per_episode = np.zeros(episodes)
@@ -53,16 +53,20 @@ def run(episodes, is_training=True, render=False):
 
         epsilon = max(epsilon - epsilon_decay_rate, 0)
 
-        if(epsilon > 0.4): 
-            learning_rate_a = 0.9 
-        elif(epsilon > 0.2 and epsilon <= 0.4): 
-            learning_rate_a = 0.2 
-        elif(epsilon > 0 and epsilon <= 0.2): 
+        if(epsilon > 0.8): 
+            learning_rate_a = 0.5 
+        elif(epsilon > 0.5 and epsilon <= 0.8): 
+            learning_rate_a = 0.6391 
+        elif(epsilon > 0.1 and epsilon <= 0.5): 
+            learning_rate_a = 0.4250 
+        elif(epsilon > 0.05 and epsilon <= 0.1): 
             learning_rate_a = 0.1 
+        elif(epsilon > 0 and epsilon <= 0.05): 
+            learning_rate_a = 0.0456  
 
 
-        if(epsilon==0.01):
-            learning_rate_a = 0.999
+        if(epsilon==0):
+            learning_rate_a = 0.0001
 
         if reward == 1:
             rewards_per_episode[i] = 1
@@ -88,3 +92,4 @@ if __name__ == '__main__':
     run(15000, is_training=True, render=False)
     print("開始評估...")
     run(500, is_training=False, render=False)
+
